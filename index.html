@@ -1,0 +1,258 @@
+IF WE ARE OFFLINE JUST TYPE YOUR MESSAGE HERE 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>One Tap Help</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0d0d0d;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 30px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .input-box {
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 30px;
+    }
+
+    .input-box label {
+      display: block;
+      color: #aaa;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    .input-box textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 12px;
+      color: white;
+      font-size: 0.95rem;
+      resize: none;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .input-box textarea:focus { border-color: #ff3333; }
+
+    .sos-btn {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ff3333, #990000);
+      border: 6px solid #ff6666;
+      color: white;
+      font-size: 2.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 60px rgba(255,50,50,0.7);
+      animation: pulse 2s infinite;
+      transition: transform 0.15s;
+      letter-spacing: 4px;
+      margin-bottom: 30px;
+    }
+
+    .sos-btn:active { transform: scale(0.93); }
+    .sos-btn:disabled { cursor: not-allowed; }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 40px rgba(255,50,50,0.5); }
+      50%       { box-shadow: 0 0 100px rgba(255,50,50,1); }
+    }
+
+    #status {
+      font-size: 1rem;
+      min-height: 24px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .feed-section {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .feed-section h2 {
+      font-size: 1rem;
+      color: #aaa;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .feed { display: flex; flex-direction: column; gap: 10px; }
+
+    .feed-item {
+      background: #1a1a1a;
+      border-left: 4px solid #ff3333;
+      border-radius: 10px;
+      padding: 12px 16px;
+    }
+
+    .feed-item .msg-text {
+      font-size: 0.95rem;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .feed-item .msg-time {
+      font-size: 0.75rem;
+      color: #555;
+    }
+
+    .feed-item .msg-badge {
+      display: inline-block;
+      background: #ff3333;
+      color: white;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-bottom: 6px;
+    }
+
+    .empty-feed {
+      color: #444;
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .clear-btn {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid #333;
+      color: #555;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-top: 12px;
+      transition: all 0.2s;
+    }
+
+    .clear-btn:hover { border-color: #ff3333; color: #ff3333; }
+  </style>
+</head>
+<body>
+
+  <h1>🆘 HELP ME</h1>
+  <p class="subtitle">Describe your problem and press SOS</p>
+
+  <div class="input-box">
+    <label>📝 Describe your problem (optional):</label>
+    <textarea id="problemText" rows="3" placeholder="e.g. I have chest pain... / I need urgent help..."></textarea>
+  </div>
+
+  <button class="sos-btn" id="sosBtn" onclick="sendSOS()">SOS</button>
+
+  <div id="status"></div>
+
+  <div class="feed-section">
+    <h2>📋 Help Requests — visible to everyone</h2>
+    <div class="feed" id="feed"></div>
+  </div>
+
+  <button class="clear-btn" onclick="clearAll()">🗑 Clear All Requests</button>
+
+  <script>
+    let messages = JSON.parse(localStorage.getItem('sos_messages') || '[]');
+
+    function renderFeed() {
+      const feed = document.getElementById('feed');
+      if (messages.length === 0) {
+        feed.innerHTML = '<div class="empty-feed">No help requests yet.</div>';
+        return;
+      }
+      feed.innerHTML = messages.slice().reverse().map(m => `
+        <div class="feed-item">
+          <span class="msg-badge">🚨 SOS</span>
+          <div class="msg-text">${m.text || 'No message — SOS only!'}</div>
+          <div class="msg-time">🕐 ${m.time}</div>
+        </div>
+      `).join('');
+    }
+
+    function sendSOS() {
+      const text = document.getElementById('problemText').value.trim();
+      const status = document.getElementById('status');
+      const btn = document.getElementById('sosBtn');
+      const now = new Date().toLocaleString('en-IN');
+
+      messages.push({ text, time: now });
+      localStorage.setItem('sos_messages', JSON.stringify(messages));
+      renderFeed();
+
+      if (Notification.permission === 'granted') {
+        new Notification('🚨 SOS ALERT!', { body: text || 'Someone needs help!', requireInteraction: true });
+      } else {
+        Notification.requestPermission().then(p => {
+          if (p === 'granted') {
+            new Notification('🚨 SOS ALERT!', { body: text || 'Someone needs help!', requireInteraction: true });
+          }
+        });
+      }
+
+      status.style.color = '#4caf50';
+      status.textContent = '✅ Alert sent successfully!';
+      document.getElementById('problemText').value = '';
+
+      btn.disabled = true;
+      btn.style.background = 'radial-gradient(circle, #555, #333)';
+      btn.style.boxShadow = 'none';
+      btn.style.animation = 'none';
+      btn.textContent = '⏳';
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.style.background = 'radial-gradient(circle, #ff3333, #990000)';
+        btn.style.boxShadow = '0 0 60px rgba(255,50,50,0.7)';
+        btn.style.animation = 'pulse 2s infinite';
+        btn.textContent = 'SOS';
+        status.textContent = '';
+      }, 10000);
+    }
+
+    function clearAll() {
+      if (confirm('Delete all help requests?')) {
+        messages = [];
+        localStorage.removeItem('sos_messages');
+        renderFeed();
+      }
+    }
+
+    renderFeed();
+    if (Notification.permission === 'default') Notification.requestPermission();
+  </script>
+
+</body>
+</html>
+```
